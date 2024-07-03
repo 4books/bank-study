@@ -20,4 +20,4 @@ spring:
 
 logging:
   level:
-    '[shop.mtcoding.bank]': INFO
+    '[com.naegwon.bank]': INFO
