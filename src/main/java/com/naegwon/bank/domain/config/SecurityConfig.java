@@ -1,6 +1,9 @@
 package com.naegwon.bank.domain.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naegwon.bank.domain.user.UserEnum;
+import com.naegwon.bank.dto.ResponseDto;
+import com.naegwon.bank.util.CustomResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +13,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -52,6 +56,13 @@ public class SecurityConfig {
 
         // HTTP Basic 비활성화
         http.httpBasic(AbstractHttpConfigurer::disable);
+
+        // Exception 가로채기
+        http.exceptionHandling(exceptionHandling -> exceptionHandling
+                .authenticationEntryPoint((request, response, authException) -> {
+                    CustomResponseUtil.unAuthentication(response, "로그인을 진행해 주세요");
+                })
+        );
 
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/s/**").authenticated()
