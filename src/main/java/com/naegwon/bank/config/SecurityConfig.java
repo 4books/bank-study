@@ -1,4 +1,4 @@
-package com.naegwon.bank.domain.config;
+package com.naegwon.bank.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naegwon.bank.domain.user.UserEnum;
