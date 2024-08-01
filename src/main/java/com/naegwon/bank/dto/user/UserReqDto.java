@@ -11,6 +11,13 @@ import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class UserReqDto {
+
+    @Getter @Setter
+    public static class LoginReqDto {
+        private String username;
+        private String password;
+    }
+
     @Getter
     @Setter
     public static class JoinReqDto {

@@ -1,6 +1,7 @@
 package com.naegwon.bank.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.naegwon.bank.config.jwt.JwtAuthenticationFilter;
 import com.naegwon.bank.domain.user.UserEnum;
 import com.naegwon.bank.dto.ResponseDto;
 import com.naegwon.bank.util.CustomResponseUtil;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
@@ -15,6 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -30,7 +33,19 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    //TODO JWT 필터 등록이 필요함
+    //JWT 필터 등록이 필요함
+    public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
+        @Override
+        public void configure(HttpSecurity builder) throws Exception {
+            AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
+            builder.addFilter(new JwtAuthenticationFilter(authenticationManager));
+            super.configure(builder);
+        }
+
+        public HttpSecurity build(){
+            return getBuilder();
+        }
+    }
 
     // JWT 서버 생성 예정. Session 미사용
     @Bean
@@ -56,6 +71,9 @@ public class SecurityConfig {
 
         // HTTP Basic 비활성화
         http.httpBasic(AbstractHttpConfigurer::disable);
+
+        //필터 적용
+        http.with(new CustomSecurityFilterManager(), CustomSecurityFilterManager::build);
 
         // Exception 가로채기
         http.exceptionHandling(exceptionHandling -> exceptionHandling
