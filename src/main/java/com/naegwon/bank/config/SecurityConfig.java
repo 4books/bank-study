@@ -2,6 +2,7 @@ package com.naegwon.bank.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naegwon.bank.config.jwt.JwtAuthenticationFilter;
+import com.naegwon.bank.config.jwt.JwtAuthorizationFilter;
 import com.naegwon.bank.domain.user.UserEnum;
 import com.naegwon.bank.dto.ResponseDto;
 import com.naegwon.bank.util.CustomResponseUtil;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,6 +41,7 @@ public class SecurityConfig {
         public void configure(HttpSecurity builder) throws Exception {
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
             builder.addFilter(new JwtAuthenticationFilter(authenticationManager));
+            builder.addFilter(new JwtAuthorizationFilter(authenticationManager));
             super.configure(builder);
         }
 
@@ -75,12 +78,19 @@ public class SecurityConfig {
         //필터 적용
         http.with(new CustomSecurityFilterManager(), CustomSecurityFilterManager::build);
 
-        // Exception 가로채기
+        // 인증 실패 가로채기
         http.exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint((request, response, authException) -> {
-                    CustomResponseUtil.unAuthentication(response, "로그인을 진행해 주세요");
+                    CustomResponseUtil.fail(response, "로그인을 진행해 주세요", HttpStatus.UNAUTHORIZED);
                 })
         );
+
+        http.exceptionHandling(exceptionHandling -> {
+           exceptionHandling.accessDeniedHandler((request, response, accessDeniedException) -> {
+              CustomResponseUtil.fail(response, "권한이 없습니다.", HttpStatus.FORBIDDEN);
+           });
+        });
+
 
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/s/**").authenticated()
