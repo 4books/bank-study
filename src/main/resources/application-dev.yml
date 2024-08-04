@@ -28,4 +28,5 @@ spring:
 
 logging:
   level:
-    '[com.naegwon.bank]': DEBUG
+    com.naegwon.bank: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

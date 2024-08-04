@@ -13,10 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Transactional
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 class UserControllerTest  extends DummyObject {
@@ -30,7 +32,7 @@ class UserControllerTest  extends DummyObject {
 
     @BeforeEach
     public void setUp() throws Exception {
-        dataSetting();
+        userRepository.save(newUser("test2", "테스트2"));
     }
 
     @Test
@@ -83,9 +85,5 @@ class UserControllerTest  extends DummyObject {
 
         //then
         resultActions.andExpect(status().isBadRequest());
-    }
-    
-    private void dataSetting() throws Exception{
-        userRepository.save(newUser("test2", "테스트2"));
     }
 }

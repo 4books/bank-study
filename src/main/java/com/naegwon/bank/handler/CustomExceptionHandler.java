@@ -18,19 +18,19 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(CustomApiException.class)
     public ResponseEntity<?> apiException(CustomApiException e){
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(CustomValidationException.class)
     public ResponseEntity<?> validationApiException(CustomValidationException e){
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), e.getErrorMap()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(CustomForbiddenException.class)
     public ResponseEntity<?> forbiddenException(CustomForbiddenException e){
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ResponseEntity<>(new ResponseDto<>(-1, e.getMessage(), null), HttpStatus.FORBIDDEN);
     }
 }

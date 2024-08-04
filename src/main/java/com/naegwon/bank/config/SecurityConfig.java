@@ -66,6 +66,7 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(configurationSource()));
 
         // JSessionId를 서버에서 관리하지 않음
+        // 추후 Token을 가지고 왔을 때 Authentication 세션을 강제로 만들어야함
         http.sessionManagement(sessionManagement ->
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -90,7 +91,6 @@ public class SecurityConfig {
               CustomResponseUtil.fail(response, "권한이 없습니다.", HttpStatus.FORBIDDEN);
            });
         });
-
 
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/s/**").authenticated()

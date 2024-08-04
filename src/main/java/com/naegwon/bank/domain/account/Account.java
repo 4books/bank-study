@@ -1,6 +1,7 @@
 package com.naegwon.bank.domain.account;
 
 import com.naegwon.bank.domain.user.User;
+import com.naegwon.bank.handler.ex.CustomApiException;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @NoArgsConstructor
 @Getter
@@ -21,7 +23,7 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(unique = true, nullable = false, length = 4)
     private Long number; //계좌번호
 
     @Column(nullable = false, length = 4)
@@ -52,5 +54,16 @@ public class Account {
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void checkOwner(Long userId){
+//        String username = user.getUsername();
+//        System.out.println("테스트 = " + username);
+        
+        //Lazy 로딩이어도 id를 조회할 때는 select 쿼리가 날라가지 않는다
+        //왜냐하면 Account table에 user_id는 가지고 있기 때문이다.
+        if (!Objects.equals(user.getId(), userId)) {
+            throw new CustomApiException("계좌 소유자가 아닙니다.");
+        }
     }
 }

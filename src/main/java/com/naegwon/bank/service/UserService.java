@@ -26,7 +26,6 @@ import static com.naegwon.bank.dto.user.UserRespDto.*;
 public class UserService {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final BCryptPasswordEncoder passwordEncoder;
 
     //서비스는 DTO로 요청받고 DTO로 응답한다.
