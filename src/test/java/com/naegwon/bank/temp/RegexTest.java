@@ -72,4 +72,46 @@ public class RegexTest {
         System.out.println("result = " + result);
     }
 
+    @Test
+    public void account_gubun_test1() throws Exception{
+        //given
+        String gubun = "DEPOSIT";
+        //when
+        boolean result = Pattern.matches("^(DEPOSIT|TRANSFER)$", gubun);
+
+        //then
+        System.out.println("result = " + result);
+    }
+
+    @Test
+    public void account_gubun_test2() throws Exception{
+        //given
+        String gubun = "TRANSFER";
+        //when
+        boolean result = Pattern.matches("^(DEPOSIT|TRANSFER)$", gubun);
+
+        //then
+        System.out.println("result = " + result);
+    }
+
+    @Test
+    public void account_tel_test() throws Exception{
+        //given
+        String tel = "010-1234-5678";
+        //when
+        boolean result = Pattern.matches("^[0-9]{3}-[0-9]{4}-[0-9]{4}", tel);
+
+        //then
+        System.out.println("result = " + result);
+    }
+
+    @Test
+    public void account_tel_test2() throws Exception{
+        //given
+        String tel = "01012345678";
+        //when
+        boolean result = Pattern.matches("^[0-9]{11}", tel);
+        //then
+        System.out.println("result = " + result);
+    }
 }
