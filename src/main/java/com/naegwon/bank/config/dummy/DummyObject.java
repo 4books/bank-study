@@ -1,6 +1,8 @@
 package com.naegwon.bank.config.dummy;
 
 import com.naegwon.bank.domain.account.Account;
+import com.naegwon.bank.domain.transaction.Transaction;
+import com.naegwon.bank.domain.transaction.TransactionEnum;
 import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserEnum;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -51,6 +53,27 @@ public class DummyObject {
                 .password(1234L)
                 .balance(balance)
                 .user(user)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    //계좌 1111L 1000원
+    //입금 트랜잭션 -> 계좌 1100원 변경 -> 입금 트랜잭션 히스토리가 생성되어야 함
+    protected Transaction newMockDepositTransaction(Long id, Account account) {
+        account.deposit(100L);
+
+        return Transaction.builder()
+                .id(id)
+                .withdrawAccount(null)
+                .depositAccount(account)
+                .withdrawAccountBalance(null)
+                .depositAccountBalance(account.getBalance())
+                .amount(100L)
+                .gubun(TransactionEnum.DEPOSIT)
+                .sender("ATM")
+                .receiver(account.getNumber() + "")
+                .tel("01012345678")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

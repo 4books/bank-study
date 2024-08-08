@@ -51,10 +51,10 @@ public class Transaction {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Transaction(Long id, Account withdrawAccount, Account wdepositAccount, Long amount, Long withdrawAccountBalance, Long depositAccountBalance, TransactionEnum gubun, String sender, String receiver, String tel, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Transaction(Long id, Account withdrawAccount, Account depositAccount, Long amount, Long withdrawAccountBalance, Long depositAccountBalance, TransactionEnum gubun, String sender, String receiver, String tel, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.withdrawAccount = withdrawAccount;
-        this.wdepositAccount = wdepositAccount;
+        this.wdepositAccount = depositAccount;
         this.amount = amount;
         this.withdrawAccountBalance = withdrawAccountBalance;
         this.depositAccountBalance = depositAccountBalance;

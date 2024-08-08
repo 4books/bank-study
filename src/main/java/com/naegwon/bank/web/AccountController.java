@@ -2,12 +2,13 @@ package com.naegwon.bank.web;
 
 import com.naegwon.bank.config.auth.LoginUser;
 import com.naegwon.bank.dto.ResponseDto;
+import com.naegwon.bank.dto.account.AccountReqDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import com.naegwon.bank.dto.account.AccountRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
-import com.naegwon.bank.handler.ex.CustomForbiddenException;
-import com.naegwon.bank.service.AccountService;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
-import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import com.naegwon.bank.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,5 +41,11 @@ public class AccountController {
     public ResponseEntity<?> deleteAccount(@PathVariable("number") Long number, @AuthenticationPrincipal LoginUser loginUser) {
         accountService.deleteAccount(number, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌 삭제 완료", null), HttpStatus.OK);
+    }
+
+    @PostMapping("/account/deposit")
+    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult){
+        AccountRespDto.AccountDepositRespDto accountDepositRespDto = accountService.depositAccount(accountDepositReqDto);
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 입금 완료", accountDepositRespDto), HttpStatus.OK);
     }
 }

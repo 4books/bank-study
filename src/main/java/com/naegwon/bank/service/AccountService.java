@@ -8,7 +8,11 @@ import com.naegwon.bank.domain.transaction.TransactionEnum;
 import com.naegwon.bank.domain.transaction.TransactionRepository;
 import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserRepository;
+import com.naegwon.bank.dto.account.AccountReqDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import com.naegwon.bank.dto.account.AccountRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
@@ -87,7 +91,7 @@ public class AccountService {
     @Transactional
     public AccountDepositRespDto depositAccount(AccountDepositReqDto accountDepositReqDto){ //ATM -> 누군가의 계좌
         //0원 체크
-        if(accountDepositReqDto.getAmount() < 0L){
+        if(accountDepositReqDto.getAmount() <= 0L){
             throw new CustomApiException("0원 이하의 금액을 입금할 수 없습니다");
         }
         
@@ -101,11 +105,11 @@ public class AccountService {
         
         //거래내역 남기기
         Transaction transaction = Transaction.builder()
-                .wdepositAccount(depositAccountPersist)
+                .depositAccount(depositAccountPersist)
                 .withdrawAccount(null)
                 .depositAccountBalance(depositAccountPersist.getBalance())
                 .withdrawAccountBalance(null)
-                .amount(accountDepositReqDto.amount)
+                .amount(accountDepositReqDto.getAmount())
                 .gubun(TransactionEnum.DEPOSIT)
                 .sender("ATM")
                 .receiver(depositAccountPersist.getNumber() + "")
@@ -116,63 +120,8 @@ public class AccountService {
         return new AccountDepositRespDto(depositAccountPersist, transactionPersist);
     }
 
-    @Getter
-    @Setter
-    public static class AccountDepositRespDto {
-        private Long id; //계좌 id
-        private Long number; //계좌 번호
-        private TransactionDto transaction; //거래내역
 
-        public AccountDepositRespDto(Account account, Transaction transaction) {
-            this.id = account.getId();
-            this.number = account.getNumber();
-            this.transaction = new TransactionDto(transaction);
-        }
 
-        @Getter
-        @Setter
-        public class TransactionDto {
-            private Long id;
-            private String gubun;
-            private String sender;
-            private String receiver;
-            private Long amount;
 
-            @JsonIgnore
-            private Long depositAccountBalance; //클라이언트에게 전달X -> 서비스단에 테스트 용도
-            private String tel;
-            private String createdAt;
-
-            public TransactionDto(Transaction transaction) {
-                this.id = transaction.getId();
-                this.gubun = transaction.getGubun().getValue();
-                this.sender = transaction.getSender();
-                this.receiver = transaction.getReceiver();
-                this.amount = transaction.getAmount();
-                this.depositAccountBalance = transaction.getDepositAccountBalance();
-                this.tel = transaction.getTel();
-                this.createdAt = transaction.getCreatedAt().toString();
-            }
-        }
-    }
-
-    @Getter
-    @Setter
-    public static class AccountDepositReqDto {
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long number;
-
-        @NotNull
-        private Long amount;
-
-        @NotEmpty
-        @Pattern(regexp = "DEPOSIT")
-        private String gubun; //DEPOSIT
-
-        @NotEmpty
-        @Pattern(regexp = "^[0-9]{11}")
-        private String tel;
-    }
 
 }
