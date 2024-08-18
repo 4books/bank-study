@@ -12,6 +12,7 @@ import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
+import com.naegwon.bank.service.AccountService.AccountWithDrawReqDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -119,7 +120,91 @@ class AccountServiceTest extends DummyObject {
         assertEquals(accountDepositRespDto.getTransaction().getDepositAccountBalance(), 1100L);
         assertEquals(account2.getBalance(), 1100L);
     }
+    
+    @Test
+    public void depositAccount_test2() throws Exception{
+        //given
+        AccountDepositReqDto accountDepositReqDto = new AccountDepositReqDto();
+        accountDepositReqDto.setNumber(1111L);
+        accountDepositReqDto.setAmount(100L);
+        accountDepositReqDto.setGubun("DEPOSIT");
+        accountDepositReqDto.setTel("01012345678");
 
+        //stub
+        User user1 = newMockUser(1L, "test", "테스트");
+        Account account1 = newMockAccount(1L, 1111L, 1000L, user1);
+        when(accountRepository.findByNumber(any())).thenReturn(Optional.of(account1));
 
+        //stub2
+        User user2 = newMockUser(2L, "test2", "테스트2");
+        Account account2 = newMockAccount(2L, 1111L, 1000L, user2);
+        Transaction transaction = newMockDepositTransaction(1L, account2);
+        when(transactionRepository.save(any())).thenReturn(transaction);
+
+        //when
+        AccountDepositRespDto accountDepositRespDto = accountService.depositAccount(accountDepositReqDto);
+
+        //then
+        String responseBody = om.writeValueAsString(accountDepositRespDto);
+        System.out.println("테스트 = " + responseBody);
+
+        assertEquals(account1.getBalance(), 1100L);
+    }
+
+    //기술적인 테크닉
+    //서비르슷 테스트하고 싶으면 내가 지금 무엇을 여기서 테스트해야할지 명확히 구분(책임 분리)
+    //DTO 를 만드는 책임 -> 서비스에 있지만 (서비스에서 DTO 검증 X -> Controller 테스트 해볼 것이니깐)
+    //DB 관련 책임 -> 서비스 것이 아님. 필요 없음
+    //DB 관련된 것을 조회했을 떄 그 값을 통해서 어떤 비지니스 로직이 흘러가는 것이 있으면 -> stub으로 정의해서 테스트해본다.
+    
+    //DB stub(가짜로 DB 만들어서 deposit 검증... 0원 검증...)
+    @Test
+    public void depositAccount_test3() throws Exception{
+        //given
+        Account account = newMockAccount(1L, 1111L, 1000L, null);
+        Long amount = 100L;
+
+        //when
+        //0원 체크
+        if(amount <= 0L){
+            throw new CustomApiException("0원 이하의 금액을 입금할 수 없습니다");
+        }
+        account.deposit(100L);
+
+        //then
+        assertEquals(account.getBalance(), 1100L);
+    }
+
+    //계좌 출금 테스트
+    @Test
+    public void withdrawAccount_test() throws Exception {
+        //given
+        Long amount = 100L;
+        Long password = 1234L;
+        Long userId = 1L;
+
+        User user = newMockUser(1L, "test", "테스트");
+        Account userAccount = newMockAccount(1L, 1111L, 1000L, user);
+
+        //when
+        if(amount <= 0L){
+            throw new CustomApiException("0원 이하의 금액을 출금할 수 없습니다");
+        }
+        userAccount.checkOwner(userId);
+        userAccount.checkSamePassword(password);
+        userAccount.checkBalance(amount);
+        userAccount.withdraw(amount);
+
+        //then
+        assertEquals(userAccount.getBalance(), 900L);
+    }
+
+    
+    //계좌 이체 테스트
+    
+    //계좌 목록 보기 테스트
+
+    //계좌 상세보기 테스트
+    
 
 }

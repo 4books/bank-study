@@ -15,6 +15,7 @@ import com.naegwon.bank.dto.account.AccountRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.AccountWithdrawRespDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotEmpty;
@@ -120,6 +121,67 @@ public class AccountService {
         return new AccountDepositRespDto(depositAccountPersist, transactionPersist);
     }
 
+    @Transactional
+    public AccountWithdrawRespDto withdrawAccount(AccountWithDrawReqDto accountWithDrawReqDto, Long userId){
+        //0원 체크
+        if(accountWithDrawReqDto.getAmount() <= 0L){
+            throw new CustomApiException("0원 이하의 금액을 출금할 수 없습니다");
+        }
+
+        //출금계좌 확인
+        Account withdrawAccountPersist = accountRepository.findByNumber(accountWithDrawReqDto.getNumber()).orElseThrow(
+                () -> new CustomApiException("계좌를 찾을 수 없습니다")
+        );
+
+        //출금 소유자 확인(로그인한 사람과 동일한지)
+        withdrawAccountPersist.checkOwner(userId);
+
+        //출금 계좌 비밀번호 확인
+        withdrawAccountPersist.checkSamePassword(accountWithDrawReqDto.getPassword());
+
+        //출금 계좌 출금 확인
+        withdrawAccountPersist.checkBalance(accountWithDrawReqDto.getAmount());
+
+        //출금하기
+        withdrawAccountPersist.withdraw(accountWithDrawReqDto.getAmount());
+
+        //거래내역 남기기
+        Transaction transaction = Transaction.builder()
+                .withdrawAccount(withdrawAccountPersist)
+                .depositAccount(null)
+                .withdrawAccountBalance(withdrawAccountPersist.getBalance())
+                .depositAccountBalance(null)
+                .amount(accountWithDrawReqDto.getAmount())
+                .gubun(TransactionEnum.WITHDRAW)
+                .sender(accountWithDrawReqDto.getNumber() + "")
+                .receiver("ATM")
+                .build();
+
+        Transaction transactionPersist = transactionRepository.save(transaction);
+
+        //DTO 응답
+        return new AccountWithdrawRespDto(withdrawAccountPersist, transactionPersist);
+    }
+
+    @Getter
+    @Setter
+    public static class AccountWithDrawReqDto {
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long number;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long password;
+
+        @NotNull
+        private Long amount;
+
+        @NotNull
+        @Pattern(regexp = "WITHDRAW")
+        private String gubun;
+    }
 
 
 

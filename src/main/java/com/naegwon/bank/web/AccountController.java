@@ -6,9 +6,12 @@ import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import com.naegwon.bank.dto.account.AccountRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.AccountWithdrawRespDto;
 import com.naegwon.bank.service.AccountService;
+import com.naegwon.bank.service.AccountService.AccountWithDrawReqDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -45,7 +48,15 @@ public class AccountController {
 
     @PostMapping("/account/deposit")
     public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult){
-        AccountRespDto.AccountDepositRespDto accountDepositRespDto = accountService.depositAccount(accountDepositReqDto);
-        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 입금 완료", accountDepositRespDto), HttpStatus.OK);
+        AccountDepositRespDto accountDepositRespDto = accountService.depositAccount(accountDepositReqDto);
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 입금 완료", accountDepositRespDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/s/account/withdraw")
+    public ResponseEntity<?> withdrawAccount(@RequestBody @Valid AccountWithDrawReqDto accountWithDrawReqDto,
+                                             BindingResult bindingResult, //valid 뒤에 바로 BindingResult가 없으면 valid 안됨
+                                             @AuthenticationPrincipal LoginUser loginUser){
+        AccountWithdrawRespDto accountWithdrawRespDto = accountService.withdrawAccount(accountWithDrawReqDto, loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 출금 완료", accountWithdrawRespDto), HttpStatus.CREATED);
     }
 }

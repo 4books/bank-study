@@ -13,6 +13,44 @@ import java.util.stream.Collectors;
 
 public class AccountRespDto {
 
+    //DTO는 똑같아도 재사용하지 않기(만약에 출금할 때 조금 DTO가 달라져야 하면 수정 범위가 너무 넓음 - 독립적으로 생성)
+    @Getter
+    @Setter
+    public static class AccountWithdrawRespDto {
+        private Long id; //계좌 id
+        private Long number; //계좌 번호
+        private Long balance; //잔액
+        private TransactionDto transaction; //거래내역
+
+        public AccountWithdrawRespDto(Account account, Transaction transaction) {
+            this.id = account.getId();
+            this.number = account.getNumber();
+            this.balance = account.getBalance();
+            this.transaction = new TransactionDto(transaction);
+        }
+
+        @Getter
+        @Setter
+        public class TransactionDto {
+            private Long id;
+            private String gubun;
+            private String sender;
+            private String receiver;
+            private Long amount;
+            private String createdAt;
+
+            public TransactionDto(Transaction transaction) {
+                this.id = transaction.getId();
+                this.gubun = transaction.getGubun().getValue();
+                this.sender = transaction.getSender();
+                this.receiver = transaction.getReceiver();
+                this.amount = transaction.getAmount();
+                this.createdAt = transaction.getCreatedAt().toString();
+            }
+        }
+    }
+
+
     @Getter
     @Setter
     public static class AccountDepositRespDto {

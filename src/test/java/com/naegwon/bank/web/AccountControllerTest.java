@@ -6,7 +6,10 @@ import com.naegwon.bank.domain.account.Account;
 import com.naegwon.bank.domain.account.AccountRepository;
 import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserRepository;
+import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
+import com.naegwon.bank.service.AccountService;
+import com.naegwon.bank.service.AccountService.AccountWithDrawReqDto;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,6 +108,61 @@ class AccountControllerTest extends DummyObject {
         assertThrows(CustomApiException.class, () -> accountRepository.findByNumber(number).orElseThrow(
                 () -> new CustomApiException("계좌를 찾을 수 없습니다")
         ));
+    }
+
+    @Test
+    public void depositAccount_test() throws Exception{
+        //given
+        AccountReqDto.AccountDepositReqDto accountDepositReqDto = new AccountReqDto.AccountDepositReqDto();
+        accountDepositReqDto.setNumber(1111L);
+        accountDepositReqDto.setAmount(100L);
+        accountDepositReqDto.setGubun("DEPOSIT");
+        accountDepositReqDto.setTel("01012345678");
+
+        String requestBody = om.writeValueAsString(accountDepositReqDto);
+        System.out.println("테스트 = " + requestBody);
+
+        //when
+        ResultActions resultActions = mvc.perform(post("/api/account/deposit")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        String responseBody = resultActions.andReturn()
+                .getResponse()
+                .getContentAsString();
+        System.out.println("테스트 = " + responseBody);
+
+        //then
+        resultActions.andExpect(status().isCreated());
+    }
+
+    @Test
+    @WithUserDetails(value = "test", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    public void withdrawAccount_test() throws Exception{
+        //given
+        AccountWithDrawReqDto accountWithDrawReqDto = new AccountWithDrawReqDto();
+        accountWithDrawReqDto.setNumber(1111L);
+        accountWithDrawReqDto.setPassword(1234L);
+        accountWithDrawReqDto.setAmount(100L);
+        accountWithDrawReqDto.setGubun("WITHDRAW");
+
+        //when
+        String requestBody = om.writeValueAsString(accountWithDrawReqDto);
+        System.out.println("테스트 = " + requestBody);
+
+        ResultActions resultActions = mvc.perform(post("/api/s/account/withdraw")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        String responseBody = resultActions.andReturn()
+                .getResponse()
+                .getContentAsString();
+        System.out.println("테스트 = " + responseBody);
+
+        //then
+
     }
 
 
