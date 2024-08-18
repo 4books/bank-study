@@ -51,4 +51,48 @@ public class AccountReqDto {
                     .build();
         }
     }
+
+    @Getter
+    @Setter
+    public static class AccountWithDrawReqDto {
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long number;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long password;
+
+        @NotNull
+        private Long amount;
+
+        @NotNull
+        @Pattern(regexp = "WITHDRAW")
+        private String gubun;
+    }
+
+    @Getter
+    @Setter
+    public static class AccountTransferReqDto {
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long withdrawNumber;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long depositNumber;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long withdrawPassword;
+
+        @NotNull
+        private Long amount;
+
+        @NotNull
+        @Pattern(regexp = "TRANSFER")
+        private String gubun;
+    }
 }

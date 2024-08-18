@@ -1,6 +1,5 @@
 package com.naegwon.bank.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.naegwon.bank.domain.account.Account;
 import com.naegwon.bank.domain.account.AccountRepository;
 import com.naegwon.bank.domain.transaction.Transaction;
@@ -8,22 +7,16 @@ import com.naegwon.bank.domain.transaction.TransactionEnum;
 import com.naegwon.bank.domain.transaction.TransactionRepository;
 import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserRepository;
-import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
-import com.naegwon.bank.dto.account.AccountRespDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountTransferReqDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountWithDrawReqDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountWithdrawRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.AccountTransferRespDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -122,7 +115,7 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountWithdrawRespDto withdrawAccount(AccountWithDrawReqDto accountWithDrawReqDto, Long userId){
+    public AccountTransferRespDto withdrawAccount(AccountWithDrawReqDto accountWithDrawReqDto, Long userId){
         //0원 체크
         if(accountWithDrawReqDto.getAmount() <= 0L){
             throw new CustomApiException("0원 이하의 금액을 출금할 수 없습니다");
@@ -160,27 +153,60 @@ public class AccountService {
         Transaction transactionPersist = transactionRepository.save(transaction);
 
         //DTO 응답
-        return new AccountWithdrawRespDto(withdrawAccountPersist, transactionPersist);
+        return new AccountTransferRespDto(withdrawAccountPersist, transactionPersist);
     }
 
-    @Getter
-    @Setter
-    public static class AccountWithDrawReqDto {
+    @Transactional
+    public AccountTransferRespDto transferAccount(AccountTransferReqDto accountTransferReqDto, Long userId){
 
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long number;
+        //출금계좌와 입금계좌가 동일하면 안됨
+        if (accountTransferReqDto.getWithdrawNumber().longValue() == accountTransferReqDto.getDepositNumber().longValue()) {
+            throw new CustomApiException("입금 계좌와 출금계좌는 동일할 수 없습니다.");
+        }
+        //0원 체크
+        if(accountTransferReqDto.getAmount() <= 0L){
+            throw new CustomApiException("0원 이하의 금액을 출금할 수 없습니다");
+        }
 
-        @NotNull
-        @Digits(integer = 4, fraction = 4)
-        private Long password;
+        //출금계좌 확인
+        Account withdrawAccountPersist = accountRepository.findByNumber(accountTransferReqDto.getWithdrawNumber()).orElseThrow(
+                () -> new CustomApiException("출금 계좌를 찾을 수 없습니다")
+        );
 
-        @NotNull
-        private Long amount;
+        //입금계좌 확인
+        Account depositAccountPersist = accountRepository.findByNumber(accountTransferReqDto.getDepositNumber()).orElseThrow(
+                () -> new CustomApiException("입금 계좌를 찾을 수 없습니다")
+        );
 
-        @NotNull
-        @Pattern(regexp = "WITHDRAW")
-        private String gubun;
+        //출금 소유자 확인(로그인한 사람과 동일한지)
+        withdrawAccountPersist.checkOwner(userId);
+
+        //출금 계좌 비밀번호 확인
+        withdrawAccountPersist.checkSamePassword(accountTransferReqDto.getWithdrawPassword());
+
+        //출금 계좌 출금 확인
+        withdrawAccountPersist.checkBalance(accountTransferReqDto.getAmount());
+
+        //이체하기
+        withdrawAccountPersist.withdraw(accountTransferReqDto.getAmount());
+        depositAccountPersist.deposit(accountTransferReqDto.getAmount());
+
+        //거래내역 남기기
+        Transaction transaction = Transaction.builder()
+                .withdrawAccount(withdrawAccountPersist)
+                .depositAccount(depositAccountPersist)
+                .withdrawAccountBalance(withdrawAccountPersist.getBalance())
+                .depositAccountBalance(depositAccountPersist.getBalance())
+                .amount(accountTransferReqDto.getAmount())
+                .gubun(TransactionEnum.TRANSFER)
+                .sender(accountTransferReqDto.getWithdrawNumber() + "")
+                .receiver(accountTransferReqDto.getDepositNumber() + "")
+                .build();
+
+        Transaction transactionPersist = transactionRepository.save(transaction);
+
+        //DTO 응답
+        return new AccountTransferRespDto(withdrawAccountPersist, transactionPersist);
     }
 
 

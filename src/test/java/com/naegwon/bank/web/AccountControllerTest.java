@@ -8,8 +8,6 @@ import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserRepository;
 import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.handler.ex.CustomApiException;
-import com.naegwon.bank.service.AccountService;
-import com.naegwon.bank.service.AccountService.AccountWithDrawReqDto;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +22,12 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import static com.naegwon.bank.dto.account.AccountReqDto.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.junit.jupiter.api.Assertions.*;
+
 
 //@Transactional
 @Sql("classpath:db/teardown.sql")
