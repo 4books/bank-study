@@ -2,8 +2,10 @@ package com.naegwon.bank.web;
 
 import com.naegwon.bank.config.auth.LoginUser;
 import com.naegwon.bank.dto.ResponseDto;
+import com.naegwon.bank.dto.account.AccountReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import com.naegwon.bank.dto.account.AccountReqDto.AccountTransferReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountWithDrawReqDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
@@ -56,5 +58,13 @@ public class AccountController {
                                              @AuthenticationPrincipal LoginUser loginUser){
         AccountTransferRespDto accountTransferRespDto = accountService.withdrawAccount(accountWithDrawReqDto, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌 출금 완료", accountTransferRespDto), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/s/account/transfer")
+    public ResponseEntity<?> transferAccount(@RequestBody @Valid AccountTransferReqDto accountTransferReqDto,
+                                             BindingResult bindingResult, //valid 뒤에 바로 BindingResult가 없으면 valid 안됨
+                                             @AuthenticationPrincipal LoginUser loginUser){
+        AccountTransferRespDto accountTransferRespDto = accountService.transferAccount(accountTransferReqDto, loginUser.getUser().getId());
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌 이체 완료", accountTransferRespDto), HttpStatus.CREATED);
     }
 }

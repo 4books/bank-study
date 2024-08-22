@@ -2,6 +2,9 @@ package com.naegwon.bank.temp;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+
 public class LongTest {
     
     @Test
@@ -27,5 +30,34 @@ public class LongTest {
         //then
         
     }
+
+    @Test
+    public void long_test2() throws Exception{
+        //given (2의 8승 - 256범위 (-128L ~ 127L)까지는 비교가 됨)
+        Long v1 = 127L;
+        Long v2 = 127L;
+
+        //when
+        if (v1 == v2) {
+            System.out.println("테스트 = " + "같습니다");
+        }
+
+        //then
+    }
+
+    @Test
+    public void long_test3() throws Exception{
+        //given
+        Long v1 = 128L;
+        Long v2 = 128L;
+
+        //when
+
+        //then
+        assertEquals(v1, v2);
+
+    }
+
+
     
 }
