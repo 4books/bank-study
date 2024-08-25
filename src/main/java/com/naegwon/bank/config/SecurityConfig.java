@@ -1,10 +1,8 @@
 package com.naegwon.bank.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naegwon.bank.config.jwt.JwtAuthenticationFilter;
 import com.naegwon.bank.config.jwt.JwtAuthorizationFilter;
 import com.naegwon.bank.domain.user.UserEnum;
-import com.naegwon.bank.dto.ResponseDto;
 import com.naegwon.bank.util.CustomResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;

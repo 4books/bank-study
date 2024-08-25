@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naegwon.bank.config.dummy.DummyObject;
 import com.naegwon.bank.domain.account.Account;
 import com.naegwon.bank.domain.account.AccountRepository;
+import com.naegwon.bank.domain.transaction.Transaction;
+import com.naegwon.bank.domain.transaction.TransactionRepository;
 import com.naegwon.bank.domain.user.User;
 import com.naegwon.bank.domain.user.UserRepository;
 import com.naegwon.bank.dto.account.AccountReqDto;
@@ -23,10 +25,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static com.naegwon.bank.dto.account.AccountReqDto.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.junit.jupiter.api.Assertions.*;
 
 
 //@Transactional
@@ -49,25 +51,24 @@ class AccountControllerTest extends DummyObject {
     private AccountRepository accountRepository;
 
     @Autowired
+    private TransactionRepository transactionRepository;
+
+    @Autowired
     private EntityManager em;
 
     @BeforeEach
     public void setUp() throws Exception {
-        User user = userRepository.save(newUser("test", "테스트"));
-        Account testAccount = accountRepository.save(newAccount(1111L, user));
-
-        User user2 = userRepository.save(newUser("test2", "테스트2"));
-        Account testAccount2 = accountRepository.save(newAccount(2222L, user2));
-        
+        dataSetting();
         em.clear(); //Persist context에 있는 데이터 삭제
     }
 
     //Jwt token -> 인증 필터 -> 시큐리티 세션 생성
     //setupBefore=TEST_METHOD (setUP method 실행 전에 수행. 그래서 유저를 못 찾음)
     //setupBefore=TEST_EXECUTION (saveAccount_test method 실행 전에 수행됨)
+
     @WithUserDetails(value = "test", setupBefore = TestExecutionEvent.TEST_EXECUTION) //test 라는 이름의 유저가 로그인이 됨
     @Test
-    public void saveAccount_test() throws Exception{
+    public void saveAccount_test() throws Exception {
         //given
         AccountSaveReqDto accountSaveReqDto = new AccountSaveReqDto();
         accountSaveReqDto.setNumber(9999L);
@@ -91,9 +92,9 @@ class AccountControllerTest extends DummyObject {
      * Lazy 로딩은 쿼리도 발생하지 않음 - PC에 있다면
      * Lazy 로딩할 때 PC에 없다면 query 발생
      */
-    @WithUserDetails(value = "test", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @WithUserDetails(value = "naegwon", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @Test
-    public void deleteAccount_test() throws Exception{
+    public void deleteAccount_test() throws Exception {
         //given
         Long number = 1111L;
 
@@ -110,7 +111,7 @@ class AccountControllerTest extends DummyObject {
     }
 
     @Test
-    public void depositAccount_test() throws Exception{
+    public void depositAccount_test() throws Exception {
         //given
         AccountReqDto.AccountDepositReqDto accountDepositReqDto = new AccountReqDto.AccountDepositReqDto();
         accountDepositReqDto.setNumber(1111L);
@@ -137,8 +138,8 @@ class AccountControllerTest extends DummyObject {
     }
 
     @Test
-    @WithUserDetails(value = "test", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    public void withdrawAccount_test() throws Exception{
+    @WithUserDetails(value = "naegwon", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    public void withdrawAccount_test() throws Exception {
         //given
         AccountWithDrawReqDto accountWithDrawReqDto = new AccountWithDrawReqDto();
         accountWithDrawReqDto.setNumber(1111L);
@@ -165,8 +166,8 @@ class AccountControllerTest extends DummyObject {
     }
 
     @Test
-    @WithUserDetails(value = "test", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    public void transferAccount_test() throws Exception{
+    @WithUserDetails(value = "naegwon", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    public void transferAccount_test() throws Exception {
         //given
         Long userId = 1L;
         AccountTransferReqDto accountTransferReqDto = new AccountTransferReqDto();
@@ -194,6 +195,48 @@ class AccountControllerTest extends DummyObject {
         resultActions.andExpect(status().isCreated());
     }
 
+    @Test
+    @WithUserDetails(value = "naegwon", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    public void findDetailAccount_test() throws Exception {
+        //given
+        Long number = 1111L;
+        String page = "0";
 
+        //when
+        ResultActions resultActions = mvc.perform(get("/api/s/account/" + number)
+                .param("page", page));
+        String responseBody = resultActions.andReturn()
+                .getResponse()
+                .getContentAsString();
+        System.out.println("테스트 = " + responseBody);
 
+        //then
+        resultActions.andExpect(jsonPath("$.data.transactions[0].balance").value(900L));
+        resultActions.andExpect(jsonPath("$.data.transactions[1].balance").value(800L));
+        resultActions.andExpect(jsonPath("$.data.transactions[2].balance").value(700L));
+        resultActions.andExpect(jsonPath("$.data.transactions[3].balance").value(800L));
+    }
+
+    private void dataSetting() {
+        User naegwon = userRepository.save(newUser("naegwon", "황내권"));
+        User test = userRepository.save(newUser("test", "테스트"));
+        User someone = userRepository.save(newUser("someone", "아무개"));
+        User admin = userRepository.save(newUser("admin", "관리자"));
+
+        Account naegwonAccount1 = accountRepository.save(newAccount(1111L, naegwon));
+        Account testAccount = accountRepository.save(newAccount(2222L, test));
+        Account someoneAccount = accountRepository.save(newAccount(3333L, someone));
+        Account naegwonAccount2 = accountRepository.save(newAccount(4444L, naegwon));
+
+        Transaction withdrawTransaction1 = transactionRepository
+                .save(newWithdrawTransaction(naegwonAccount1, accountRepository));
+        Transaction depositTransaction1 = transactionRepository
+                .save(newDepositTransaction(testAccount, accountRepository));
+        Transaction transferTransaction1 = transactionRepository
+                .save(newTransferTransaction(naegwonAccount1, testAccount, accountRepository));
+        Transaction transferTransaction2 = transactionRepository
+                .save(newTransferTransaction(naegwonAccount1, someoneAccount, accountRepository));
+        Transaction transferTransaction3 = transactionRepository
+                .save(newTransferTransaction(testAccount, naegwonAccount1, accountRepository));
+    }
 }

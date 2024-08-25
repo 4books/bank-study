@@ -11,10 +11,8 @@ import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountTransferReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountWithDrawReqDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountTransferRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.*;
 import com.naegwon.bank.handler.ex.CustomApiException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -209,7 +207,20 @@ public class AccountService {
         return new AccountTransferRespDto(withdrawAccountPersist, transactionPersist);
     }
 
+    public AccountDetailRespDto findDetailAccount(Long number, Long userId, Integer page) {
+        //1. 구분값 고정
+        String gubun = "ALL";
 
+        //계좌 확인
+        Account accountPersist = accountRepository.findByNumber(number).orElseThrow(
+                () -> new CustomApiException("계좌를 찾을 수 없습니다")
+        );
 
+        //계좌 소유자 확인(로그인한 사람과 동일한지)
+        accountPersist.checkOwner(userId);
+
+        List<Transaction> transactionList = transactionRepository.findTransactionList(accountPersist.getId(), gubun, page);
+        return new AccountDetailRespDto(accountPersist, transactionList);
+    }
 
 }

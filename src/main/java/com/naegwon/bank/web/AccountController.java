@@ -7,10 +7,8 @@ import com.naegwon.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountTransferReqDto;
 import com.naegwon.bank.dto.account.AccountReqDto.AccountWithDrawReqDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountDepositRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountListRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountSaveRespDto;
-import com.naegwon.bank.dto.account.AccountRespDto.AccountTransferRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto;
+import com.naegwon.bank.dto.account.AccountRespDto.*;
 import com.naegwon.bank.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,4 +65,14 @@ public class AccountController {
         AccountTransferRespDto accountTransferRespDto = accountService.transferAccount(accountTransferReqDto, loginUser.getUser().getId());
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌 이체 완료", accountTransferRespDto), HttpStatus.CREATED);
     }
+
+    @GetMapping("/s/account/{number}")
+    public ResponseEntity<?> findDetailAccount(@PathVariable("number") Long number,
+                                               @RequestParam(value = "page", defaultValue = "0") Integer page,
+                                               @AuthenticationPrincipal LoginUser loginUser) {
+        AccountDetailRespDto accountDetailRespDto = accountService.findDetailAccount(number, loginUser.getUser().getId(),
+                page);
+        return new ResponseEntity<>(new ResponseDto<>(1, "계좌상세보기 성공", accountDetailRespDto), HttpStatus.OK);
+    }
+
 }

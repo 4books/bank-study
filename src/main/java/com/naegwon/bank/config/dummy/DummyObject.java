@@ -1,6 +1,7 @@
 package com.naegwon.bank.config.dummy;
 
 import com.naegwon.bank.domain.account.Account;
+import com.naegwon.bank.domain.account.AccountRepository;
 import com.naegwon.bank.domain.transaction.Transaction;
 import com.naegwon.bank.domain.transaction.TransactionEnum;
 import com.naegwon.bank.domain.user.User;
@@ -58,11 +59,71 @@ public class DummyObject {
                 .build();
     }
 
-    //계좌 1111L 1000원
-    //입금 트랜잭션 -> 계좌 1100원 변경 -> 입금 트랜잭션 히스토리가 생성되어야 함
-    protected Transaction newMockDepositTransaction(Long id, Account account) {
-        account.deposit(100L);
+    protected Transaction newDepositTransaction(Account account, AccountRepository accountRepository) {
+        account.deposit(100L); // 1000원이 있었다면 900원이 됨
+        // 더티체킹이 안되기 때문에
+        if (accountRepository != null) {
+            accountRepository.save(account);
+        }
+        return Transaction.builder()
+                .withdrawAccount(null)
+                .depositAccount(account)
+                .withdrawAccountBalance(null)
+                .depositAccountBalance(account.getBalance())
+                .amount(100L)
+                .gubun(TransactionEnum.DEPOSIT)
+                .sender("ATM")
+                .receiver(account.getNumber() + "")
+                .tel("01022227777")
+                .build();
+    }
 
+
+    protected Transaction newWithdrawTransaction(Account account, AccountRepository accountRepository) {
+        account.withdraw(100L); // 1000원이 있었다면 900원이 됨
+
+        // Repository Test에서는 더티체킹 됨
+        // Controller Test에서는 더티체킹 안됨
+        if (accountRepository != null) {
+            accountRepository.save(account);
+        }
+        return Transaction.builder()
+                .withdrawAccount(account)
+                .depositAccount(null)
+                .withdrawAccountBalance(account.getBalance())
+                .depositAccountBalance(null)
+                .amount(100L)
+                .gubun(TransactionEnum.WITHDRAW)
+                .sender(account.getNumber() + "")
+                .receiver("ATM")
+                .build();
+    }
+
+    protected Transaction newTransferTransaction(Account withdrawAccount, Account depositAccount,
+                                                 AccountRepository accountRepository) {
+        withdrawAccount.withdraw(100L);
+        depositAccount.deposit(100L);
+        // 더티체킹이 안되기 때문에
+        if (accountRepository != null) {
+            accountRepository.save(withdrawAccount);
+            accountRepository.save(depositAccount);
+        }
+        return Transaction.builder()
+                .withdrawAccount(withdrawAccount)
+                .depositAccount(depositAccount)
+                .withdrawAccountBalance(withdrawAccount.getBalance())
+                .depositAccountBalance(depositAccount.getBalance())
+                .amount(100L)
+                .gubun(TransactionEnum.TRANSFER)
+                .sender(withdrawAccount.getNumber() + "")
+                .receiver(depositAccount.getNumber() + "")
+                .build();
+    }
+
+    // 계좌 1111L 1000원
+    // 입금 트랜잭션 -> 계좌 1100원 변경 -> 입금 트랙잭션 히스토리가 생성되어야 함.
+    protected static Transaction newMockDepositTransaction(Long id, Account account) {
+        account.deposit(100L);
         return Transaction.builder()
                 .id(id)
                 .withdrawAccount(null)
@@ -73,7 +134,7 @@ public class DummyObject {
                 .gubun(TransactionEnum.DEPOSIT)
                 .sender("ATM")
                 .receiver(account.getNumber() + "")
-                .tel("01012345678")
+                .tel("01088887777")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

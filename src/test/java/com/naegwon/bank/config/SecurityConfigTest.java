@@ -1,4 +1,4 @@
-package com.naegwon.bank.domain.config;
+package com.naegwon.bank.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
