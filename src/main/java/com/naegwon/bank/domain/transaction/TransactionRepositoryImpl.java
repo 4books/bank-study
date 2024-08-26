@@ -35,8 +35,9 @@ public class TransactionRepositoryImpl implements Dao{
             sql += "left join fetch t.depositAccount da ";
             sql += "where t.withdrawAccount.id = :withdrawAccountId ";
             sql += "or ";
-            sql += "t.depositAccount.id = :depositAccountId";
+            sql += "t.depositAccount.id = :depositAccountId ";
         }
+        sql += "ORDER BY t.createdAt DESC";
 
         TypedQuery<Transaction> query = em.createQuery(sql, Transaction.class);
 
